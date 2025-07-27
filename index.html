@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R.E.P.O. SaveCraft</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #280061;
+            --secondary-color: #280061;
+            --accent-color: #4ff7a6;
+            --background-color: #1b1b1b;
+            --card-color: #ffffff;
+            --text-color: #333333;
+            --border-color: #e0e0e0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1, h2, h3 {
+            margin-top: 0;
+            color: var(--secondary-color);
+        }
+        
+        .file-section {
+            background-color: var(--card-color);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .file-input {
+            padding: 20px;
+            border: 2px dashed var(--border-color);
+            border-radius: 5px;
+            text-align: center;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+        
+        .file-input:hover {
+            border-color: var(--accent-color);
+            background-color: rgba(79, 195, 247, 0.05);
+        }
+        
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        
+        button {
+            padding: 10px 15px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        button.secondary {
+            background-color: #757575;
+        }
+        
+        button.secondary:hover {
+            background-color: #616161;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: var(--card-color);
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .tab-content {
+            display: none;
+            background-color: var(--card-color);
+            padding: 20px;
+            border-radius: 0 5px 5px 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .card {
+            background-color: var(--card-color);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .card h3 {
+            margin-top: 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .item-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 10px;
+        }
+        
+        .item-category {
+            margin-bottom: 15px;
+        }
+        
+        .item-category h4 {
+            margin: 10px 0 5px 0;
+            color: var(--primary-color);
+        }
+        
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px dashed var(--border-color);
+        }
+        
+        .item-row:last-child {
+            border-bottom: none;
+        }
+        
+        .status-bar {
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        
+        .status-fill {
+            height: 100%;
+            background-color: var(--accent-color);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .player-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .player-stat {
+            background-color: rgba(79, 195, 247, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 3px solid var(--accent-color);
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4caf50;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .notification.show {
+            opacity: 1;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .player-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <p>R.E.P.O. SaveCraft BY XENX</p>
+            <p>再也不怕手速不夠快</p>
+        </header>
+        
+        <div class="file-section">
+            <div class="form-group">
+                <label for="password">R.E.P.O 存檔路徑（可直接複製貼到檔案總管）</label>
+                <input type="text" value="%USERPROFILE%\AppData\LocalLow\semiwork\Repo\saves\" disabled>
+            </div>
+
+            <div class="file-input" id="fileDropArea">
+                <p>拖放 ES3 遊戲存檔文件到這裡，或點擊選擇文件</p>
+                <input type="file" id="fileInput" accept=".es3" class="hidden">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">解密密碼</label>
+                <input type="text" id="password" value="Why would you want to cheat?... :o It's no fun. :') :'D">
+            </div>
+            
+            <button id="decryptBtn">解密存檔</button>
+            <button id="encryptBtn" class="secondary" disabled>加密並保存</button>
+        </div>
+        
+        <div id="editorSection" class="hidden">
+            <div class="tabs">
+                <div class="tab active" data-tab="player">玩家數據</div>
+                <div class="tab" data-tab="items">道具管理</div>
+                <div class="tab" data-tab="run">關卡與進度</div>
+                <div class="tab" data-tab="raw">原始數據</div>
+            </div>
+            
+            <div class="tab-content active" id="player">
+                <h2>玩家數據編輯</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h3>基本資訊</h3>
+                        <div class="form-group">
+                            <label for="teamName">團隊名稱:</label>
+                            <input type="text" id="teamName">
+                        </div>
+                        <div class="form-group">
+                            <label for="timePlayed">遊戲時間 (秒):</label>
+                            <input type="number" id="timePlayed" step="0.01">
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>玩家屬性</h3>
+                        <div id="playerAttributes">
+                            <!-- 動態生成玩家屬性 -->
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>玩家列表</h3>
+                        <div id="playerList">
+                            <!-- 動態生成玩家列表 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="items">
+                <h2>道具管理</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h3>道具數量</h3>
+                        <div class="item-list" id="itemPurchasedList">
+                            <!-- 動態生成道具列表 -->
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>道具電池狀態</h3>
+                        <div class="item-list" id="itemBatteryList">
+                            <!-- 動態生成電池狀態列表 -->
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>升級道具</h3>
+                        <div class="item-list" id="itemUpgradesList">
+                            <!-- 動態生成升級道具列表 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="run">
+                <h2>關卡與進度</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h3>關卡狀態</h3>
+                        <div class="form-group">
+                            <label for="runLevel">當前關卡:</label>
+                            <input type="number" id="runLevel" min="0" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="runLives">剩餘生命:</label>
+                            <input type="number" id="runLives" min="0" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="runCurrency">金幣數量:</label>
+                            <input type="number" id="runCurrency" min="0" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="runTotalHaul">總搬運量:</label>
+                            <input type="number" id="runTotalHaul" min="0" step="1">
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>充電站狀態</h3>
+                        <div class="form-group">
+                            <label for="chargingStationCharge">當前充電量:</label>
+                            <input type="number" id="chargingStationCharge" min="0" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="chargingStationChargeTotal">總充電量:</label>
+                            <input type="number" id="chargingStationChargeTotal" min="0" step="1">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="raw">
+                <h2>原始數據</h2>
+                <div class="form-group">
+                    <button id="refreshRawData">刷新數據</button>
+                </div>
+                <pre id="rawDataOutput"></pre>
+            </div>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification"></div>
+    
+    <script>
+        // 全局變量存儲解密後的數據
+        let gameData = null;
+        let currentPlayerId = null;
+        
+        // DOM 加載完成後初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化標籤頁
+            initTabs();
+            
+            // 初始化文件拖放
+            initFileDrop();
+            
+            // 綁定按鈕事件
+            document.getElementById('decryptBtn').addEventListener('click', decryptFile);
+            document.getElementById('encryptBtn').addEventListener('click', encryptAndSave);
+            document.getElementById('refreshRawData').addEventListener('click', refreshRawData);
+        });
+        
+        // 初始化標籤頁
+        function initTabs() {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // 移除所有活動標籤
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // 設置當前活動標籤
+                    tab.classList.add('active');
+                    document.getElementById(tab.dataset.tab).classList.add('active');
+                });
+            });
+        }
+        
+        // 初始化文件拖放
+        function initFileDrop() {
+            const fileInput = document.getElementById('fileInput');
+            const fileDropArea = document.getElementById('fileDropArea');
+            
+            fileDropArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                fileDropArea.style.borderColor = '#4CAF50';
+                fileDropArea.style.backgroundColor = 'rgba(76, 175, 80, 0.1)';
+            });
+            
+            fileDropArea.addEventListener('dragleave', () => {
+                fileDropArea.style.borderColor = '#e0e0e0';
+                fileDropArea.style.backgroundColor = '';
+            });
+            
+            fileDropArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                fileDropArea.style.borderColor = '#e0e0e0';
+                fileDropArea.style.backgroundColor = '';
+                
+                if (e.dataTransfer.files.length) {
+                    fileInput.files = e.dataTransfer.files;
+                    showNotification('文件已選擇: ' + e.dataTransfer.files[0].name);
+                }
+            });
+            
+            fileDropArea.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files.length) {
+                    showNotification('文件已選擇: ' + fileInput.files[0].name);
+                }
+            });
+        }
+        
+        // 解密文件
+        async function decryptFile() {
+            const fileInput = document.getElementById('fileInput');
+            const password = document.getElementById('password').value;
+            
+            if (!fileInput.files.length) {
+                showNotification('請選擇一個 ES3 存檔文件', 'error');
+                return;
+            }
+            
+            if (!password) {
+                showNotification('請輸入解密密碼', 'error');
+                return;
+            }
+            
+            try {
+                const file = fileInput.files[0];
+                const arrayBuffer = await file.arrayBuffer();
+                const encryptedData = new Uint8Array(arrayBuffer);
+                
+                // 解密數據
+                const decryptedData = decryptES3(encryptedData, password);
+                gameData = JSON.parse(decryptedData);
+                
+                // 初始化編輯器
+                initEditor();
+                
+                // 顯示編輯器部分
+                document.getElementById('editorSection').classList.remove('hidden');
+                document.getElementById('encryptBtn').disabled = false;
+                
+                showNotification('文件解密成功！');
+                
+            } catch (error) {
+                console.error('解密失敗:', error);
+                showNotification('解密失敗: ' + error.message, 'error');
+            }
+        }
+        
+        // 加密並保存文件
+        function encryptAndSave() {
+            if (!gameData) {
+                showNotification('沒有可加密的數據', 'error');
+                return;
+            }
+            
+            try {
+                // 更新遊戲數據
+                updateGameData();
+                
+                const password = document.getElementById('password').value;
+                const jsonString = JSON.stringify(gameData, null, 2);
+                const encryptedData = encryptES3(jsonString, password);
+                
+                // 創建 Blob 並下載
+                const blob = new Blob([encryptedData], { type: 'application/octet-stream' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'modified_save.es3';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showNotification('文件加密並保存成功！');
+                
+            } catch (error) {
+                console.error('加密失敗:', error);
+                showNotification('加密失敗: ' + error.message, 'error');
+            }
+        }
+        
+        // 初始化編輯器
+        function initEditor() {
+            if (!gameData) return;
+            
+            // 載入基本信息
+            loadBasicInfo();
+            
+            // 載入玩家數據
+            loadPlayerData();
+            
+            // 載入道具數據
+            loadItemsData();
+            
+            // 載入關卡數據
+            loadRunData();
+            
+            // 載入原始數據
+            refreshRawData();
+        }
+        
+        // 載入基本信息
+        function loadBasicInfo() {
+            if (gameData.teamName?.value) {
+                document.getElementById('teamName').value = gameData.teamName.value;
+            }
+            
+            if (gameData.timePlayed?.value) {
+                document.getElementById('timePlayed').value = gameData.timePlayed.value;
+            }
+        }
+        
+        // 載入玩家數據
+        function loadPlayerData() {
+            const playerListContainer = document.getElementById('playerList');
+            const playerAttributesContainer = document.getElementById('playerAttributes');
+            
+            playerListContainer.innerHTML = '';
+            playerAttributesContainer.innerHTML = '';
+            
+            if (!gameData.playerNames?.value) {
+                playerListContainer.innerHTML = '<p>沒有找到玩家數據</p>';
+                return;
+            }
+            
+            const playerIds = Object.keys(gameData.playerNames.value);
+            currentPlayerId = playerIds.length > 0 ? playerIds[0] : null;
+            
+            // 創建玩家選擇列表
+            const playerSelect = document.createElement('select');
+            playerSelect.id = 'playerSelect';
+            playerSelect.addEventListener('change', (e) => {
+                currentPlayerId = e.target.value;
+                updatePlayerAttributesDisplay();
+            });
+            
+            playerIds.forEach(playerId => {
+                const option = document.createElement('option');
+                option.value = playerId;
+                option.textContent = `${gameData.playerNames.value[playerId]} (${playerId})`;
+                playerSelect.appendChild(option);
+            });
+            
+            playerListContainer.appendChild(playerSelect);
+            
+            // 創建玩家屬性編輯器
+            const attributes = [
+                { id: 'playerHealth', name: '生命值', type: 'number', min: 0, max: 200 },
+                { id: 'playerUpgradeHealth', name: '生命值升級', type: 'number', min: 0, max: 10 },
+                { id: 'playerUpgradeStamina', name: '耐力升級', type: 'number', min: 0, max: 10 },
+                { id: 'playerUpgradeExtraJump', name: '額外跳躍', type: 'number', min: 0, max: 10 },
+                { id: 'playerUpgradeLaunch', name: '發射升級', type: 'number', min: 0, max: 10 },
+                { id: 'playerUpgradeSpeed', name: '速度升級', type: 'number', min: 0, max: 10 },
+                { id: 'playerUpgradeStrength', name: '力量升級', type: 'number', min: 0, max: 10 },
+                { id: 'playerUpgradeRange', name: '範圍升級', type: 'number', min: 0, max: 10 },
+                { id: 'playerUpgradeThrow', name: '投擲升級', type: 'number', min: 0, max: 10 },
+                { id: 'playerUpgradeCrouchRest', name: '蹲下恢復', type: 'number', min: 0, max: 10 },
+                { id: 'playerUpgradeTumbleWings', name: '翻滾翅膀', type: 'number', min: 0, max: 10 },
+                { id: 'playerHasCrown', name: '擁有皇冠', type: 'checkbox' }
+            ];
+            
+            attributes.forEach(attr => {
+                const group = document.createElement('div');
+                group.className = 'form-group';
+                
+                const label = document.createElement('label');
+                label.htmlFor = attr.id;
+                label.textContent = attr.name;
+                
+                let input;
+                if (attr.type === 'checkbox') {
+                    input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.id = attr.id;
+                    input.addEventListener('change', updateGameData);
+                } else {
+                    input = document.createElement('input');
+                    input.type = 'number';
+                    input.id = attr.id;
+                    input.min = attr.min;
+                    input.max = attr.max;
+                    input.addEventListener('input', updateGameData);
+                }
+                
+                group.appendChild(label);
+                group.appendChild(input);
+                playerAttributesContainer.appendChild(group);
+            });
+            
+            // 更新顯示
+            updatePlayerAttributesDisplay();
+        }
+        
+        // 更新玩家屬性顯示
+        function updatePlayerAttributesDisplay() {
+            if (!currentPlayerId || !gameData.dictionaryOfDictionaries?.value) return;
+            
+            const dict = gameData.dictionaryOfDictionaries.value;
+            const attributes = [
+                'playerHealth', 'playerUpgradeHealth', 'playerUpgradeStamina',
+                'playerUpgradeExtraJump', 'playerUpgradeLaunch', 'playerUpgradeSpeed',
+                'playerUpgradeStrength', 'playerUpgradeRange', 'playerUpgradeThrow',
+                'playerUpgradeCrouchRest', 'playerUpgradeTumbleWings', 'playerHasCrown'
+            ];
+            
+            attributes.forEach(attr => {
+                const input = document.getElementById(attr);
+                if (!input) return;
+                
+                if (dict[attr] && dict[attr][currentPlayerId] !== undefined) {
+                    if (input.type === 'checkbox') {
+                        input.checked = dict[attr][currentPlayerId] === 1;
+                    } else {
+                        input.value = dict[attr][currentPlayerId];
+                    }
+                } else {
+                    if (input.type === 'checkbox') {
+                        input.checked = false;
+                    } else {
+                        input.value = 0;
+                    }
+                }
+            });
+        }
+        
+        // 載入道具數據
+        function loadItemsData() {
+            if (!gameData.dictionaryOfDictionaries?.value) return;
+            
+            const dict = gameData.dictionaryOfDictionaries.value;
+            
+            // 道具數量
+            const itemPurchasedList = document.getElementById('itemPurchasedList');
+            itemPurchasedList.innerHTML = '';
+            
+            if (dict.itemsPurchased) {
+                const categories = categorizeItems(dict.itemsPurchased);
+                renderItemList(categories, itemPurchasedList, 'itemsPurchased');
+            }
+            
+            // 道具電池狀態
+            const itemBatteryList = document.getElementById('itemBatteryList');
+            itemBatteryList.innerHTML = '';
+            
+            if (dict.itemStatBattery) {
+                const categories = categorizeItems(dict.itemStatBattery);
+                renderItemList(categories, itemBatteryList, 'itemStatBattery', true);
+            }
+            
+            // 升級道具
+            const itemUpgradesList = document.getElementById('itemUpgradesList');
+            itemUpgradesList.innerHTML = '';
+            
+            if (dict.itemsUpgradesPurchased) {
+                const categories = categorizeItems(dict.itemsUpgradesPurchased);
+                renderItemList(categories, itemUpgradesList, 'itemsUpgradesPurchased');
+            }
+        }
+        
+        // 分類道具
+        function categorizeItems(items) {
+            const categories = {
+                'Cart': [],
+                'Drone': [],
+                'Duck': [],
+                'Extraction': [],
+                'Grenade': [],
+                'Gun': [],
+                'Health': [],
+                'Melee': [],
+                'Mine': [],
+                'Orb': [],
+                'Phase': [],
+                'Power': [],
+                'Rubber': [],
+                'Upgrade': [],
+                'Valuable': [],
+                'Other': []
+            };
+            
+            Object.keys(items).forEach(itemName => {
+                const itemValue = items[itemName];
+                
+                // 跳過帶有斜杠的項目（這些是具體實例）
+                if (itemName.includes('/')) return;
+                
+                let category = 'Other';
+                
+                if (itemName.startsWith('Item Cart')) category = 'Cart';
+                else if (itemName.startsWith('Item Drone')) category = 'Drone';
+                else if (itemName.startsWith('Item Duck')) category = 'Duck';
+                else if (itemName.startsWith('Item Extraction')) category = 'Extraction';
+                else if (itemName.startsWith('Item Grenade')) category = 'Grenade';
+                else if (itemName.startsWith('Item Gun')) category = 'Gun';
+                else if (itemName.startsWith('Item Health')) category = 'Health';
+                else if (itemName.startsWith('Item Melee')) category = 'Melee';
+                else if (itemName.startsWith('Item Mine')) category = 'Mine';
+                else if (itemName.startsWith('Item Orb')) category = 'Orb';
+                else if (itemName.startsWith('Item Phase')) category = 'Phase';
+                else if (itemName.startsWith('Item Power')) category = 'Power';
+                else if (itemName.startsWith('Item Rubber')) category = 'Rubber';
+                else if (itemName.startsWith('Item Upgrade')) category = 'Upgrade';
+                else if (itemName.startsWith('Item Valuable')) category = 'Valuable';
+                
+                categories[category].push({
+                    name: itemName.replace('Item ', ''),
+                    value: itemValue
+                });
+            });
+            
+            return categories;
+        }
+        
+        // 渲染道具列表
+        function renderItemList(categories, container, dictKey, showProgress = false) {
+            Object.keys(categories).forEach(category => {
+                if (categories[category].length === 0) return;
+                
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'item-category';
+                
+                const heading = document.createElement('h4');
+                heading.textContent = category;
+                categoryDiv.appendChild(heading);
+                
+                categories[category].forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = 'item-row';
+                    
+                    const nameSpan = document.createElement('span');
+                    nameSpan.textContent = item.name;
+                    
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.value = item.value;
+                    input.min = 0;
+                    input.style.width = '60px';
+                    input.dataset.key = dictKey;
+                    input.dataset.item = 'Item ' + item.name;
+                    input.addEventListener('change', updateGameData);
+                    
+                    row.appendChild(nameSpan);
+                    row.appendChild(input);
+                    categoryDiv.appendChild(row);
+                    
+                    if (showProgress) {
+                        const progressDiv = document.createElement('div');
+                        progressDiv.className = 'status-bar';
+                        
+                        const progressFill = document.createElement('div');
+                        progressFill.className = 'status-fill';
+                        progressFill.style.width = `${item.value}%`;
+                        
+                        progressDiv.appendChild(progressFill);
+                        categoryDiv.appendChild(progressDiv);
+                    }
+                });
+                
+                container.appendChild(categoryDiv);
+            });
+        }
+        
+        // 載入關卡數據
+        function loadRunData() {
+            if (!gameData.dictionaryOfDictionaries?.value?.runStats) return;
+            
+            const runStats = gameData.dictionaryOfDictionaries.value.runStats;
+            
+            if (runStats.level !== undefined) {
+                document.getElementById('runLevel').value = runStats.level;
+            }
+            
+            if (runStats.currency !== undefined) {
+                document.getElementById('runCurrency').value = runStats.currency;
+            }
+            
+            if (runStats.lives !== undefined) {
+                document.getElementById('runLives').value = runStats.lives;
+            }
+            
+            if (runStats.chargingStationCharge !== undefined) {
+                document.getElementById('chargingStationCharge').value = runStats.chargingStationCharge;
+            }
+            
+            if (runStats.chargingStationChargeTotal !== undefined) {
+                document.getElementById('chargingStationChargeTotal').value = runStats.chargingStationChargeTotal;
+            }
+            
+            if (runStats.totalHaul !== undefined) {
+                document.getElementById('runTotalHaul').value = runStats.totalHaul;
+            }
+        }
+        
+        // 刷新原始數據顯示
+        function refreshRawData() {
+            if (!gameData) return;
+            
+            const rawDataOutput = document.getElementById('rawDataOutput');
+            rawDataOutput.textContent = JSON.stringify(gameData, null, 2);
+        }
+        
+        // 更新遊戲數據
+        function updateGameData() {
+            if (!gameData) return;
+            
+            // 更新基本信息
+            gameData.teamName.value = document.getElementById('teamName').value;
+            gameData.timePlayed.value = parseFloat(document.getElementById('timePlayed').value) || 0;
+            
+            // 更新玩家屬性
+            if (currentPlayerId && gameData.dictionaryOfDictionaries?.value) {
+                const dict = gameData.dictionaryOfDictionaries.value;
+                const attributes = [
+                    'playerHealth', 'playerUpgradeHealth', 'playerUpgradeStamina',
+                    'playerUpgradeExtraJump', 'playerUpgradeLaunch', 'playerUpgradeSpeed',
+                    'playerUpgradeStrength', 'playerUpgradeRange', 'playerUpgradeThrow',
+                    'playerUpgradeCrouchRest', 'playerUpgradeTumbleWings', 'playerHasCrown'
+                ];
+                
+                attributes.forEach(attr => {
+                    const input = document.getElementById(attr);
+                    if (!input || !dict[attr]) return;
+                    
+                    if (input.type === 'checkbox') {
+                        dict[attr][currentPlayerId] = input.checked ? 1 : 0;
+                    } else {
+                        dict[attr][currentPlayerId] = parseInt(input.value) || 0;
+                    }
+                });
+            }
+            
+            // 更新道具數據
+            document.querySelectorAll('input[data-key]').forEach(input => {
+                const dictKey = input.dataset.key;
+                const itemName = input.dataset.item;
+                const value = parseInt(input.value) || 0;
+                
+                if (gameData.dictionaryOfDictionaries?.value[dictKey]) {
+                    gameData.dictionaryOfDictionaries.value[dictKey][itemName] = value;
+                    
+                    // 更新進度條顯示
+                    if (input.parentElement.nextElementSibling?.classList.contains('status-bar')) {
+                        const fill = input.parentElement.nextElementSibling.querySelector('.status-fill');
+                        if (fill) {
+                            fill.style.width = `${value}%`;
+                        }
+                    }
+                }
+            });
+            
+            // 更新關卡數據
+            if (gameData.dictionaryOfDictionaries?.value?.runStats) {
+                const runStats = gameData.dictionaryOfDictionaries.value.runStats;
+                
+                runStats.level = parseInt(document.getElementById('runLevel').value) || 0;
+                runStats.currency = parseInt(document.getElementById('runCurrency').value) || 0;
+                runStats.lives = parseInt(document.getElementById('runLives').value) || 0;
+                runStats.chargingStationCharge = parseInt(document.getElementById('chargingStationCharge').value) || 0;
+                runStats.chargingStationChargeTotal = parseInt(document.getElementById('chargingStationChargeTotal').value) || 0;
+                runStats.totalHaul = parseInt(document.getElementById('runTotalHaul').value) || 0;
+            }
+            
+            showNotification('數據已更新');
+        }
+        
+        // 顯示通知
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = 'notification';
+            
+            if (type === 'error') {
+                notification.style.backgroundColor = '#f44336';
+            } else {
+                notification.style.backgroundColor = '#4CAF50';
+            }
+            
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // 解密 ES3 文件
+        function decryptES3(encryptedData, password) {
+            const iv = encryptedData.slice(0, 16);
+            const encrypted = encryptedData.slice(16);
+            
+            // 使用 CryptoJS 實現 PBKDF2
+            const salt = CryptoJS.lib.WordArray.create(iv);
+            const key = CryptoJS.PBKDF2(password, salt, {
+                keySize: 16 / 4, // 16 bytes
+                iterations: 100,
+                hasher: CryptoJS.algo.SHA1
+            });
+            
+            // 準備解密
+            const cipherParams = CryptoJS.lib.CipherParams.create({
+                ciphertext: CryptoJS.lib.WordArray.create(encrypted)
+            });
+            
+            // 解密
+            const decrypted = CryptoJS.AES.decrypt(
+                cipherParams,
+                key,
+                { 
+                    iv: CryptoJS.lib.WordArray.create(iv),
+                    mode: CryptoJS.mode.CBC,
+                    padding: CryptoJS.pad.Pkcs7
+                }
+            );
+            
+            let decryptedBytes = new Uint8Array(decrypted.toString(CryptoJS.enc.Latin1).length);
+            for (let i = 0; i < decryptedBytes.length; i++) {
+                decryptedBytes[i] = decrypted.toString(CryptoJS.enc.Latin1).charCodeAt(i);
+            }
+            
+            // 檢查是否是 gzip 壓縮
+            if (decryptedBytes[0] === 0x1f && decryptedBytes[1] === 0x8b) {
+                decryptedBytes = pako.ungzip(decryptedBytes);
+            }
+            
+            return new TextDecoder().decode(decryptedBytes);
+        }
+        
+        // 加密 ES3 文件
+        function encryptES3(data, password) {
+            // 轉換為 Uint8Array
+            const dataBytes = new TextEncoder().encode(data);
+            
+            // 生成隨機 IV
+            const iv = new Uint8Array(16);
+            crypto.getRandomValues(iv);
+            
+            // 使用 CryptoJS 實現 PBKDF2
+            const salt = CryptoJS.lib.WordArray.create(iv);
+            const key = CryptoJS.PBKDF2(password, salt, {
+                keySize: 16 / 4, // 16 bytes
+                iterations: 100,
+                hasher: CryptoJS.algo.SHA1
+            });
+            
+            // 加密
+            const encrypted = CryptoJS.AES.encrypt(
+                CryptoJS.enc.Latin1.parse(data),
+                key,
+                {
+                    iv: CryptoJS.lib.WordArray.create(iv),
+                    mode: CryptoJS.mode.CBC,
+                    padding: CryptoJS.pad.Pkcs7
+                }
+            );
+            
+            // 合併 IV 和加密數據
+            const encryptedBytes = new Uint8Array(iv.length + encrypted.ciphertext.words.length * 4);
+            encryptedBytes.set(iv, 0);
+            
+            for (let i = 0; i < encrypted.ciphertext.words.length; i++) {
+                const word = encrypted.ciphertext.words[i];
+                encryptedBytes[iv.length + i * 4] = (word >> 24) & 0xff;
+                encryptedBytes[iv.length + i * 4 + 1] = (word >> 16) & 0xff;
+                encryptedBytes[iv.length + i * 4 + 2] = (word >> 8) & 0xff;
+                encryptedBytes[iv.length + i * 4 + 3] = word & 0xff;
+            }
+            
+            return encryptedBytes;
+        }
+    </script>
+</body>
+</html>
